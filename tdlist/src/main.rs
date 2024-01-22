@@ -1,3 +1,6 @@
+use tdlist::configuration::get_configuration;
+
 fn main() {
-    println!("To do list");
+    let settings = get_configuration();
+    println!("To do list {:?}", settings);
 }
