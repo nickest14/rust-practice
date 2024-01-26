@@ -2,6 +2,7 @@ use anyhow::{anyhow, Result};
 use crossterm::event::KeyCode;
 use serde::{Deserialize, Serialize};
 use std::fs::OpenOptions;
+use std::io::prelude::*;
 use std::path::PathBuf;
 use std::{env, fs};
 
@@ -352,6 +353,16 @@ impl SettingsBuilder {
         Ok(())
     }
 
+    pub fn get_default_db_file() -> Result<PathBuf> {
+        let default_path = Self::default_path()?;
+        let path = default_path.join("tasks.json");
+        if !path.exists() {
+            let mut file = OpenOptions::new().write(true).create(true).open(&path)?;
+            writeln!(file, "{{}}")?;
+        }
+        Ok(path)
+    }
+
     pub fn get_settings_path() -> Result<PathBuf> {
         let default_path = Self::default_path()?;
         let path = default_path.join("settings.json");
@@ -382,4 +393,8 @@ pub fn get_configuration() -> Settings {
         .open(settings_path)
         .expect("Could not open settings file");
     serde_json::from_reader(file).expect("Could not parse settings file")
+}
+
+pub fn get_db_file() -> PathBuf {
+    SettingsBuilder::get_default_db_file().expect("Could not find default task file")
 }
