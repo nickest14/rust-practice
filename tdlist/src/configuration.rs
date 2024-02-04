@@ -36,6 +36,19 @@ pub struct Icons {
     pub repeats: String,
 }
 
+impl Icons {
+    pub fn get_complete_icon(&self, complete: bool) -> String {
+        let icon = if complete {
+            self.complete.clone()
+        } else {
+            self.incomplete.clone()
+        };
+
+        // Needs some padding
+        format!(" {}", icon)
+    }
+}
+
 impl Default for Icons {
     fn default() -> Self {
         Icons {

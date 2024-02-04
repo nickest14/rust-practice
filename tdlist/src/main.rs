@@ -7,5 +7,4 @@ fn main() {
     if std::env::args().len() > 1 {
         _ = cli::start_cli(app)
     }
-    println!("To do list");
 }

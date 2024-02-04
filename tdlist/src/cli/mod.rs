@@ -3,9 +3,11 @@ use anyhow::Result;
 use clap::Parser;
 
 mod add;
+mod cli_utils;
 mod complete;
 mod config;
 mod delete;
+mod formats;
 mod ls;
 
 #[derive(Parser)]

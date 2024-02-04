@@ -1,5 +1,5 @@
 use crate::repeat::Repeat;
-use chrono::{DateTime, Local, TimeZone};
+use chrono::{Date, DateTime, Local, TimeZone};
 use serde::{Deserialize, Serialize};
 
 pub fn serialize_dt<S>(date: &DateTime<Local>, serializer: S) -> Result<S::Ok, S::Error>
@@ -32,7 +32,35 @@ pub struct Task {
     pub complete: bool,
 }
 
-impl Task {}
+impl Task {
+    pub fn set_id(&mut self, id: Option<usize>) {
+        self.id = id;
+    }
+
+    pub fn set_name(&mut self, name: String) {
+        self.name = name;
+    }
+
+    pub fn set_date(&mut self, date: DateTime<Local>) {
+        self.date = date;
+    }
+
+    pub fn set_repeats(&mut self, repeats: Repeat) {
+        self.repeats = repeats;
+    }
+
+    pub fn set_group(&mut self, group: String) {
+        self.group = Some(group);
+    }
+
+    pub fn set_description(&mut self, description: String) {
+        self.description = Some(description);
+    }
+
+    pub fn set_url(&mut self, url: String) {
+        self.url = Some(url);
+    }
+}
 
 impl Default for Task {
     fn default() -> Self {
