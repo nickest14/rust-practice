@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 
 use crate::app::{App, Id};
+use crate::configuration::Settings;
 use crate::task::Task;
+use crate::utils;
 
 use anyhow::Result;
 use clap::{Parser, ValueEnum};
@@ -43,8 +45,72 @@ pub enum DateFilter {
     Next24,
 }
 
+pub fn filter_by_relative_date(
+    tasks: HashMap<Id, Task>,
+    date_filter: Option<DateFilter>,
+) -> HashMap<Id, Task> {
+    let now = chrono::Local::now();
+    match date_filter {
+        Some(DateFilter::Today) => tasks
+            .into_iter()
+            .filter(|(_, t)| {
+                let today = now.date_naive();
+                t.date.date_naive() == today
+            })
+            .collect(),
+        Some(DateFilter::Past) => tasks.into_iter().filter(|(_, t)| t.date < now).collect(),
+        Some(DateFilter::TodayAndPast) => tasks
+            .into_iter()
+            .filter(|(_, t)| {
+                let today = now.date_naive();
+                t.date.date_naive() <= today
+            })
+            .collect(),
+        Some(DateFilter::Next24) => tasks
+            .into_iter()
+            .filter(|(_, t)| {
+                let tomorrow = now + chrono::Duration::days(1);
+                t.date >= now && t.date < tomorrow
+            })
+            .collect(),
+        _ => tasks,
+    }
+}
+
+pub fn filter_by_exact_date(
+    tasks: HashMap<Id, Task>,
+    date: Option<String>,
+    settings: &Settings,
+) -> Result<HashMap<Id, Task>> {
+    let tasks = match date {
+        Some(date) => {
+            let date = utils::parse_date(date.as_str(), settings)?;
+            tasks.into_iter().filter(|(_, t)| t.date == date).collect()
+        }
+        None => tasks,
+    };
+    Ok(tasks)
+}
+
+pub fn filter_by_group(tasks: HashMap<Id, Task>, group: Option<String>) -> HashMap<Id, Task> {
+    match group {
+        Some(group) => {
+            let group = group.to_lowercase();
+            tasks
+                .into_iter()
+                .filter(|(_, t)| {
+                    t.group
+                        .as_ref()
+                        .map(|g| g.to_lowercase() == group)
+                        .unwrap_or(false)
+                })
+                .collect()
+        }
+        None => tasks,
+    }
+}
+
 pub fn run(app: App, args: Args) -> Result<()> {
-    // TODO:
     let Args {
         format,
         show_complete,
@@ -61,7 +127,9 @@ pub fn run(app: App, args: Args) -> Result<()> {
         app.tasks
     };
 
-    // TODO: Add filter function
+    let tasks = filter_by_relative_date(tasks, date_filter);
+    let tasks = filter_by_exact_date(tasks, date, &app.settings)?;
+    let tasks = filter_by_group(tasks, group);
 
     let mut tasks_vec = tasks.values().collect::<Vec<_>>();
     tasks_vec.sort_by(|a, b| a.date.cmp(&b.date).then_with(|| a.name.cmp(&b.name)));
